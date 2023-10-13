@@ -19,6 +19,8 @@
 `include "support_modules/mux_4to1_32bit.v"
 `include "support_modules/mux_2to1_32bit.v"
 
+`include "zicsr/zicsr.v"
+
 `timescale 1ns/100ps
 
 module cpu (
@@ -163,6 +165,10 @@ module cpu (
         WB_REG_WRITE_ADDR, WB_REG_WRITE_EN,
         EX_OP1_FWD_SEL, EX_OP2_FWD_SEL
     );
+    
+
+    //zicsr unit 
+    rv32i_csr(CLK,RESET,) 
 
     /****************************************** EX / MEM ******************************************/
     pr_ex_mem PIPE_REG_EX_MEM (

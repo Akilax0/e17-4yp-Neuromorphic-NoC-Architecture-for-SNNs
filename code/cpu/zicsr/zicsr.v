@@ -11,37 +11,42 @@
 module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
     input wire i_clk, i_rst_n,
     // Interrupts
-    input wire i_external_interrupt, //interrupt from external source
-    input wire i_software_interrupt, //interrupt from software (inter-processor interrupt)
-    input wire i_timer_interrupt, //interrupt from timer
+    // input wire i_external_interrupt, //interrupt from external source
+    // input wire i_software_interrupt, //interrupt from software (inter-processor interrupt)
+    // input wire i_timer_interrupt, //interrupt from timer
+
     /// Exceptions ///
-    input wire i_is_inst_illegal, //illegal instruction
-    input wire i_is_ecall, //ecall instruction
-    input wire i_is_ebreak, //ebreak instruction
-    input wire i_is_mret, //mret (return from trap) instruction
+    // input wire i_is_inst_illegal, //illegal instruction
+    // input wire i_is_ecall, //ecall instruction
+    // input wire i_is_ebreak, //ebreak instruction
+    // input wire i_is_mret, //mret (return from trap) instruction
+
     /// Instruction/Load/Store Misaligned Exception///
     input wire[`OPCODE_WIDTH-1:0] i_opcode, //opcode types
     input wire[31:0] i_y, //y value from ALU (address used in load/store/jump/branch)
+
     /// CSR instruction ///
     input wire[2:0] i_funct3, // CSR instruction operation
     input wire[11:0] i_csr_index, // immediate value from decoder
     input wire[31:0] i_imm, //unsigned immediate for immediate type of CSR instruction (new value to be stored to CSR)
     input wire[31:0] i_rs1, //Source register 1 value (new value to be stored to CSR)
     output reg[31:0] o_csr_out, //CSR value to be loaded to basereg
+
     // Trap-Handler 
-    input wire[31:0] i_pc, //Program Counter 
-    input wire writeback_change_pc, //high if writeback will issue change_pc (which will override this stage)
-    output reg[31:0] o_return_address, //mepc CSR
-    output reg[31:0] o_trap_address, //mtvec CSR
-    output reg o_go_to_trap_q, //high before going to trap (if exception/interrupt detected)
-    output reg o_return_from_trap_q, //high before returning from trap (via mret)
-    input wire i_minstret_inc, //increment minstret after executing an instruction
+    // input wire[31:0] i_pc, //Program Counter 
+    // input wire writeback_change_pc, //high if writeback will issue change_pc (which will override this stage)
+    // output reg[31:0] o_return_address, //mepc CSR
+    // output reg[31:0] o_trap_address, //mtvec CSR
+    // output reg o_go_to_trap_q, //high before going to trap (if exception/interrupt detected)
+    // output reg o_return_from_trap_q, //high before returning from trap (via mret)
+    // input wire i_minstret_inc, //increment minstret after executing an instruction
+
     /// Pipeline Control ///
-    input wire i_ce, // input clk enable for pipeline stalling of this stage
-    input wire i_stall //informs this stage to stall
+    // input wire i_ce, // input clk enable for pipeline stalling of this stage
+    // input wire i_stall //informs this stage to stall
 );
     
-               //CSR operation type
+               //CSR operation type (funt3)
     localparam CSRRW = 3'b001,
                CSRRS = 3'b010,
                CSRRC = 3'b011,
@@ -51,29 +56,29 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
                
                //CSR addresses
                //machine info
-    localparam MVENDORID = 12'hF11,  
-               MARCHID = 12'hF12,
-               MIMPID = 12'hF13,
-               MHARTID = 12'hF14,
+    localparam MVENDORID = 12'hF11, // vendor id 
+               MARCHID = 12'hF12, // architecture id
+               MIMPID = 12'hF13, //implementation id
+               MHARTID = 12'hF14, // hardware thread id
                //machine trap setup
-               MSTATUS = 12'h300, 
-               MISA = 12'h301,
-               MIE = 12'h304,
-               MTVEC = 12'h305,
+               MSTATUS = 12'h300, // machine status register
+               MISA = 12'h301, // ISA and extensions
+               MIE = 12'h304, // machine interrupt enable
+               MTVEC = 12'h305, // machine trap handler base address
                //machine trap handling
-               MSCRATCH = 12'h340, 
-               MEPC = 12'h341,
-               MCAUSE = 12'h342,
-               MTVAL = 12'h343,
-               MIP = 12'h344,
+               MSCRATCH = 12'h340,  // scratch register for machine trap handlers
+               MEPC = 12'h341, // machine exeption pc
+               MCAUSE = 12'h342, // trap cause
+               MTVAL = 12'h343, // bad adress or insturction
+               MIP = 12'h344, // machine interrupt pending
                //machine counters/timers
-               MCYCLE = 12'hB00,
-               MCYCLEH = 12'hB80,
+               MCYCLE = 12'hB00, // machine cycle counter
+               MCYCLEH = 12'hB80, // upper 32bit of mcycle, RV32 only
                //TIME = 12'hC01,
                //TIMEH = 12'hC81,
-               MINSTRET = 12'hB02,
-               MINSTRETH = 12'hBB2,
-               MCOUNTINHIBIT = 12'h320;
+               MINSTRET = 12'hB02, // machine instructions-retired counter
+               MINSTRETH = 12'hBB2, // upper 32 of minstret(machine instructions - retired counter) RV32 only
+               MCOUNTINHIBIT = 12'h320; // machine counter inhibit register
                 
                //mcause codes
     localparam MACHINE_SOFTWARE_INTERRUPT =3,
@@ -93,23 +98,26 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
     wire opcode_jal=i_opcode[`JAL];
     wire opcode_jalr=i_opcode[`JALR];
     wire opcode_system=i_opcode[`SYSTEM];
+
     reg[31:0] csr_in; //value to be stored to CSR
     reg[31:0] csr_data; //value at current CSR address
     wire csr_enable = opcode_system && i_funct3!=0 && i_ce && !writeback_change_pc; //csr read/write operation is enabled only at this conditions
-    reg[1:0] new_pc = 0; //last two bits of i_pc that will be used in taken branch and jumps
-    reg go_to_trap; //high before going to trap (if exception/interrupt detected)
-    reg return_from_trap; //high before returning from trap (via mret)
-    reg is_load_addr_misaligned; 
-    reg is_store_addr_misaligned;
-    reg is_inst_addr_misaligned;
+
+    // reg[1:0] new_pc = 0; //last two bits of i_pc that will be used in taken branch and jumps
+    // reg go_to_trap; //high before going to trap (if exception/interrupt detected)
+    // reg return_from_trap; //high before returning from trap (via mret)
+    // reg is_load_addr_misaligned; 
+    // reg is_store_addr_misaligned;
+    // reg is_inst_addr_misaligned;
+
     //reg timer_interrupt;
-    reg external_interrupt_pending; 
-    reg software_interrupt_pending;
-    reg timer_interrupt_pending;
-    reg is_interrupt;
-    reg is_exception;
-    reg is_trap;
-    wire stall_bit =i_stall;
+    // reg external_interrupt_pending; 
+    // reg software_interrupt_pending;
+    // reg timer_interrupt_pending;
+    // reg is_interrupt;
+    // reg is_exception;
+    // reg is_trap;
+    // wire stall_bit =i_stall;
 
     // CSR register bits
     reg mstatus_mie; //Machine Interrupt Enable
@@ -136,36 +144,36 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
     reg mcountinhibit_cy; //controls increment of mcycle
     reg mcountinhibit_ir; //controls increment of minstret
     
-    //control logic for load/store/instruction misaligned exception detection
-    always @* begin
-        is_load_addr_misaligned = 0;
-        is_store_addr_misaligned = 0;
-        is_inst_addr_misaligned = 0;
-        new_pc = 0;
+    // //control logic for load/store/instruction misaligned exception detection
+    // always @* begin
+    //     is_load_addr_misaligned = 0;
+    //     is_store_addr_misaligned = 0;
+    //     is_inst_addr_misaligned = 0;
+    //     new_pc = 0;
         
-        // Misaligned Load/Store Address
-        if(i_funct3[1:0] == 2'b01) begin //halfword load/store
-            is_load_addr_misaligned = opcode_load? i_y[0] : 0;
-            is_store_addr_misaligned = opcode_store? i_y[0] : 0;
-        end
-        if(i_funct3[1:0] == 2'b10) begin //word load/store
-            is_load_addr_misaligned = opcode_load? i_y[1:0]!=2'b00 : 0;
-            is_store_addr_misaligned = opcode_store? i_y[1:0]!=2'b00 : 0;
-        end
+    //     // Misaligned Load/Store Address
+    //     if(i_funct3[1:0] == 2'b01) begin //halfword load/store
+    //         is_load_addr_misaligned = opcode_load? i_y[0] : 0;
+    //         is_store_addr_misaligned = opcode_store? i_y[0] : 0;
+    //     end
+    //     if(i_funct3[1:0] == 2'b10) begin //word load/store
+    //         is_load_addr_misaligned = opcode_load? i_y[1:0]!=2'b00 : 0;
+    //         is_store_addr_misaligned = opcode_store? i_y[1:0]!=2'b00 : 0;
+    //     end
         
-        // Misaligned Instruction Address
-        /* Volume 1 pg. 15: Instructions are 32 bits in length and must be aligned on a four-byte boundary in memory.
-        An instruction-address-misaligned exception is generated on a taken branch or unconditional jump
-        if the target address is not four-byte aligned. This exception is reported on the branch or jump
-        instruction, not on the target instruction. No instruction-address-misaligned exception is generated
-        for a conditional branch that is not taken. */
-        if((opcode_branch && i_y[0]) || opcode_jal || opcode_jalr) begin // branch or jump to new instruction
-            new_pc = i_pc[1:0] + i_csr_index[1:0];
-            if(opcode_jalr) new_pc = i_rs1[1:0] +  i_csr_index[1:0];
-            is_inst_addr_misaligned = (new_pc == 2'b00)? 1'b0:1'b1; //i_pc (instruction address) must always be four bytes aligned
-        end
+    //     // Misaligned Instruction Address
+    //     /* Volume 1 pg. 15: Instructions are 32 bits in length and must be aligned on a four-byte boundary in memory.
+    //     An instruction-address-misaligned exception is generated on a taken branch or unconditional jump
+    //     if the target address is not four-byte aligned. This exception is reported on the branch or jump
+    //     instruction, not on the target instruction. No instruction-address-misaligned exception is generated
+    //     for a conditional branch that is not taken. */
+    //     if((opcode_branch && i_y[0]) || opcode_jal || opcode_jalr) begin // branch or jump to new instruction
+    //         new_pc = i_pc[1:0] + i_csr_index[1:0];
+    //         if(opcode_jalr) new_pc = i_rs1[1:0] +  i_csr_index[1:0];
+    //         is_inst_addr_misaligned = (new_pc == 2'b00)? 1'b0:1'b1; //i_pc (instruction address) must always be four bytes aligned
+    //     end
         
-    end
+    // end
     
     //control logic for writing to CSRs
     always @(posedge i_clk,negedge i_rst_n) begin
@@ -352,10 +360,10 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
            
                    
                             
-            //MIP (pending interrupts)       
-            mip_msip <= i_software_interrupt;
-            mip_mtip <= i_timer_interrupt;
-            mip_meip <= i_external_interrupt;
+            // //MIP (pending interrupts)       
+            // mip_msip <= i_software_interrupt;
+            // mip_mtip <= i_timer_interrupt;
+            // mip_meip <= i_external_interrupt;
             
             
             //MINSTRET (counts number instructions retired/executed by core [upper half])       
