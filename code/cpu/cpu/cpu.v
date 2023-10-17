@@ -20,6 +20,7 @@
 `include "support_modules/mux_2to1_32bit.v"
 
 `include "zicsr/zicsr.v"
+`include "interrupt_controller/interrupt_controller.v"
 
 `timescale 1ns/100ps
 

@@ -21,6 +21,12 @@ inst_count = 0
 
 FILE_SIZE = 1024
 
+# convert a given number to binary according to a given format
+def toBin(numOfDigits, num):
+    num = int(num)
+    s = bin(num & int("1"*numOfDigits, 2))[2:]
+    return ("{0:0>%s}" % (numOfDigits)).format(s)
+
 def abi_convert(Instructions):
     return -1
 
@@ -135,13 +141,15 @@ def handleInstruction(separatedIns):
         # , FCVT.S.WU, , FCVT.WU.S,
         # 00000  
         # FSQRT.S , FCVT.W.S,  FMV.X.W, FCLASS.S, FCVT.S.W, FMV.W.X
-        
+
+    #0000000000000 1000 010 01001 0000011
+
         
     elif(inst_data[separatedIns[0]]['type'] == "I-Type"):
 
         print(separatedIns) 
         im = ["L","C","F"]
-        if separatedIns[0][1] in im:
+        if separatedIns[0][0] in im:
             # lw rs2:value  immediate  rs1:base
             # FLW only floating ponit I-type
             Instruction = toBin(12, separatedIns[2]) + space + toBin(5, separatedIns[3]) + space + inst_data[separatedIns[0]]['funct3'] + space + toBin(5, separatedIns[1]) + space + inst_data[separatedIns[0]]['opcode']
@@ -243,11 +251,6 @@ def handleInpFile():
     # start the instruction formatting
     formatInstructions(Instructions)
 
-# convert a given number to binary according to a given format
-def toBin(numOfDigits, num):
-    num = int(num)
-    s = bin(num & int("1"*numOfDigits, 2))[2:]
-    return ("{0:0>%s}" % (numOfDigits)).format(s)
 
 # saving data to a .bin file
 def saveToFile(line):

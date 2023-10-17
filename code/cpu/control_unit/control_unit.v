@@ -115,6 +115,8 @@ module control_unit (
 
     (opcode == 7'b0111111) ? 3'b010 :   // I AM CONFUSION: WHAT ARE YOU????
     (opcode == 7'b0101111) ? 3'b100 :   // I AM CONFUSION: WHO ARE YOU???
+    
+    (opcode == 7'b1110011) ? 3'b010 :    // CSR (I-Type) instructions
 
     (opcode == 7'b0010011) ? 3'b010: 3'bxxx;    // All other I-Type instructions (ADDI, SLTI, etc.)
 
@@ -130,6 +132,7 @@ module control_unit (
     assign #3 OPERAND2_SELECT =
         (opcode == 7'b0000011) |    // LOAD instructions 
         (opcode == 7'b0010011) |    // I-Type instructions (ADDI, SLTI, etc.)
+        (opcode == 7'b1110011) |    // CSR (I-Type) instructions
         (opcode == 7'b0010111) |    // AUIPC
         (opcode == 7'b0100011) |    // STORE instructions
         (opcode == 7'b0110111) |    // LUI
