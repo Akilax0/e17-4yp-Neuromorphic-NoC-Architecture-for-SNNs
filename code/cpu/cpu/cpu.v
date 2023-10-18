@@ -18,6 +18,7 @@
 `include "support_modules/plus_4_adder.v"
 `include "support_modules/mux_4to1_32bit.v"
 `include "support_modules/mux_2to1_32bit.v"
+`include "support_modules/mux_2to1_5bit.v"
 
 `include "zicsr/zicsr.v"
 `include "interrupt_controller/interrupt_controller.v"
@@ -42,12 +43,12 @@ module cpu (
 
     /******************* Connection wires *******************/
     // IF
-    wire [31:0] PC_PLUS_4, PC_SELECT_OUT, PC_NEXT;
+    wire [31:0] PC_PLUS_4, PC_SELECT_OUT, PC_NEXT, PC_NEXT_FINAL;
 
     // ID
     wire [31:0] ID_PC, ID_INSTRUCTION, ID_REG_DATA1, ID_REG_DATA2, ID_IMMEDIATE;
     wire [5:0] ID_ALU_SELECT;
-    wire [3:0] ID_DATA_MEM_READ, ID_BRANCH_CTRL;
+    wire [3:0] ID_DATA_MEM_READ, ID_BRANCH_CTRL, ID_CSR_SELECT;
     wire [2:0] ID_DATA_MEM_WRITE, ID_IMMEDIATE_SELECT;
     wire [1:0] ID_WB_VALUE_SELECT;
     wire ID_REG_WRITE_EN, ID_OPERAND1_SELECT, ID_OPERAND2_SELECT, ID_LU_HAZ_SIG,
@@ -59,10 +60,11 @@ module cpu (
                 EX_ALU_DATA1, EX_ALU_DATA2, EX_ALU_OUT;
     wire [5:0] EX_ALU_SELECT;
     wire [4:0] EX_REG_WRITE_ADDR, EX_REG_READ_ADDR1, EX_REG_READ_ADDR2;
-    wire [3:0] EX_DATA_MEM_READ, EX_BRANCH_CTRL;
+    wire [3:0] EX_DATA_MEM_READ, EX_BRANCH_CTRL, EX_CSR_SELECT;
     wire [2:0] EX_DATA_MEM_WRITE;
     wire [1:0] EX_OP1_FWD_SEL, EX_OP2_FWD_SEL, EX_WB_VALUE_SELECT;
     wire EX_REG_WRITE_EN, EX_OPERAND1_SELECT, EX_OPERAND2_SELECT, EX_BRANCH_SELECT;
+    wire [31:0] EX_UIMM;
 
     // MEM
     wire [31:0] MEM_PC, MEM_PC_PLUS_4, MEM_ALU_OUT, MEM_REG_DATA2;
@@ -78,7 +80,6 @@ module cpu (
     wire [1:0] WB_WB_VALUE_SELECT;
     wire WB_DATA_MEM_READ, WB_REG_WRITE_EN;
 
-
     /****************************************** IF stage ******************************************/
     // Calculate PC+4
     plus_4_adder IF_PC_PLUS_4_ADDER (PC, PC_PLUS_4);  
@@ -88,6 +89,12 @@ module cpu (
 
     // Select between PC+4 and branch target
     mux_2to1_32bit BRANCH_SELECT_MUX (PC_SELECT_OUT, EX_ALU_OUT, PC_NEXT, EX_BRANCH_SELECT);
+    
+    // interrupt controller 
+    // PC_NEXT_FINAL for updated PC after ISR call
+    // this is assigned to PC 
+    interrupt_controller isr(CLK, RESET, PC_NEXT, INT_SIG, PC_NEXT_FINAL);
+
 
 
     /****************************************** IF / ID ******************************************/
@@ -134,15 +141,14 @@ module cpu (
         ID_INSTRUCTION[11:7], ID_INSTRUCTION[19:15], ID_INSTRUCTION[24:20], 
         ID_ALU_SELECT, ID_OPERAND1_SELECT, ID_OPERAND2_SELECT,
         ID_REG_WRITE_EN, ID_DATA_MEM_WRITE, ID_DATA_MEM_READ, 
-        ID_BRANCH_CTRL, ID_WB_VALUE_SELECT,
+        ID_BRANCH_CTRL, ID_WB_VALUE_SELECT, ID_CSR_SELECT,
 
         EX_PC, EX_REG_DATA1, EX_REG_DATA2, EX_IMMEDIATE,
         EX_REG_WRITE_ADDR, EX_REG_READ_ADDR1, EX_REG_READ_ADDR2,
         EX_ALU_SELECT, EX_OPERAND1_SELECT, EX_OPERAND2_SELECT,
         EX_REG_WRITE_EN, EX_DATA_MEM_WRITE, EX_DATA_MEM_READ,
-        EX_BRANCH_CTRL, EX_WB_VALUE_SELECT
+        EX_BRANCH_CTRL, EX_WB_VALUE_SELECT, EX_CSR_SELECT
     );
-
 
     /****************************************** EX stage ******************************************/
     // Operand forwarding muxes
@@ -167,12 +173,14 @@ module cpu (
         EX_OP1_FWD_SEL, EX_OP2_FWD_SEL
     );
     
-
-    //zicsr unit 
-    rv32i_csr(CLK,RESET,) 
+    // CSR select mux
+    // mux_2to1_5bit CSR_SELECT( EX_OP1_FWD_MUX_OUT, UIMM, CSR_VALUE_SELECT, CSR_MUX_OUT) 
+    // Check to add new hardware accessible ports
+    zicsr CSR_REG(CLK, RESET, EX_IMMEDIATE, EX_REG_READ_ADDR1, EX_OP1_FWD_MUX_OUT, EX_CSR_SELECT);
 
     /****************************************** EX / MEM ******************************************/
-    pr_ex_mem PIPE_REG_EX_MEM (
+    pr_ex_mem PIPE_REG_EX_MEM (, CSR_VALUE_SELECT, CSR_OUT);
+
         CLK, RESET, 
 
         EX_PC, EX_ALU_OUT, EX_OP2_FWD_MUX_OUT,
@@ -228,7 +236,7 @@ module cpu (
         if (RESET == 1'b1)      // Reset PC to zero if RESET is asserted
             PC = 32'b0;
         else if (!INSTR_MEM_BUSYWAIT || !DATA_MEM_BUSYWAIT)     // Stall PC if BUSYWAIT is asserted
-            PC = PC_NEXT;
+            PC = PC_NEXT_FINAL;
     end
 
 endmodule

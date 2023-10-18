@@ -8,13 +8,14 @@ module control_unit (
     DATA_MEM_WRITE, DATA_MEM_READ,
     BRANCH_CTRL, IMMEDIATE_SELECT, 
     OPERAND1_SELECT, OPERAND2_SELECT, 
-    WRITEBACK_VALUE_SELECT);
+    WRITEBACK_VALUE_SELECT, CSR_VALUE_SELECT);
 
     // Instruction to be decoded
     input [31:0] INSTRUCTION;
 
     // Output control signals
     output wire REG_WRITE_EN, OPERAND1_SELECT, OPERAND2_SELECT;
+    output wire [3:0] CSR_VALUE_SELECT;
     output wire [5:0] ALU_SELECT;
     output wire [3:0] DATA_MEM_READ, BRANCH_CTRL;
     output wire [2:0] DATA_MEM_WRITE, IMMEDIATE_SELECT;
@@ -132,7 +133,6 @@ module control_unit (
     assign #3 OPERAND2_SELECT =
         (opcode == 7'b0000011) |    // LOAD instructions 
         (opcode == 7'b0010011) |    // I-Type instructions (ADDI, SLTI, etc.)
-        (opcode == 7'b1110011) |    // CSR (I-Type) instructions
         (opcode == 7'b0010111) |    // AUIPC
         (opcode == 7'b0100011) |    // STORE instructions
         (opcode == 7'b0110111) |    // LUI
@@ -147,7 +147,10 @@ module control_unit (
         (opcode == 7'b0000011) ? 2'b01 :        // LOAD
         2'b10;      // Everything else
 
-    
+    /*************************** CSR mux select signal generation ***************************/
+    assign #3 CSR_VALUE_SELECT[2:0] =  funct3;
+
+    CSR_VALUE_SELECT[3] = (opcode == 7'b1110011);  
 
     // FLOAT ALWAYS BLOCK TO IMPLEMENT (I AM CONFUSION: What always block?)
 

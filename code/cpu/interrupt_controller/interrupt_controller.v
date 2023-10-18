@@ -1,4 +1,5 @@
 `include "../supported_modules/mux2to1_32bit.v"
+`include "../zicsr/zicsr.v"
 
 module interrupt_controller(
         input clk,
@@ -6,37 +7,39 @@ module interrupt_controller(
         input [31:0] pc_next;
         input interrupt_signal;
         output [31:0] pc_next_final;
-        output [31:0] pc_next_regfile;
-        output reg en_regfile;
-        input jalr_select_signal;
-        input [4:0] regfile_addr_1;
+        // output [31:0] pc_next_regfile;
+        // output reg en_regfile;
+        // input jalr_select_signal;
+        // input [4:0] regfile_addr_1;
     );
 
+    reg mux_sel;
     
-    regg mux_sel;
+    // Read from csr ??
     localparam ISR_PC = 20;
-    assign pc_next_regfile = pc_next;
+    
+    // write pc to csr
+    // assign pc_next_regfile = pc_next;
 
     //state machine states
-    localparam  IDLE_STATE = 0, // normal operation
-                ISR_INIT_STATE = 1, // store pc / flag set
-                ISR_STATE = 2; // ISR execute
+    localparam  IDLE_STATE = 0, // normal operation 
+                ISR_INIT_STATE = 1, // store pc move to ISR and set flag in csr
+                RETURN_STATE = 2; // return state
                 // RETURN_STATE = 3; // load pc and resume
 
-
-    reg [1:0] current_state , next_state;
+    reg [1:0] current_state, next_state;
     
     mux2to1_32bit pcMux(pc_next,ISR_PC,pc_next_final,mux_sel);
 
     // set the reset signal
-    reg return_from_isr;
-    always @* begin
-        if (jalr_select_signal == 1'b1 )begin
-            if (regfile_addr_1 == 5'd30) return_from_isr = 1'b1;
-            else return_from_isr = 1'b0;
-        end
-        else return_from_isr = 1'b0;
-    end
+    // reg return_from_isr;
+    // always @* begin
+    //     if (jalr_select_signal == 1'b1 )begin
+    //         if (regfile_addr_1 == 5'd30) return_from_isr = 1'b1;
+    //         else return_from_isr = 1'b0;
+    //     end
+    //     else return_from_isr = 1'b0;
+    // end
 
 
     // combinational logic to calc next stage begin

@@ -22,14 +22,15 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
     // input wire i_is_mret, //mret (return from trap) instruction
 
     /// Instruction/Load/Store Misaligned Exception///
-    input wire[`OPCODE_WIDTH-1:0] i_opcode, //opcode types
-    input wire[31:0] i_y, //y value from ALU (address used in load/store/jump/branch)
+    // input wire[`OPCODE_WIDTH-1:0] i_opcode, //opcode types
+    // input wire[31:0] i_y, //y value from ALU (address used in load/store/jump/branch)
 
     /// CSR instruction ///
-    input wire[2:0] i_funct3, // CSR instruction operation
+    // input wire[2:0] i_funct3, // CSR instruction operation
     input wire[11:0] i_csr_index, // immediate value from decoder
     input wire[31:0] i_imm, //unsigned immediate for immediate type of CSR instruction (new value to be stored to CSR)
     input wire[31:0] i_rs1, //Source register 1 value (new value to be stored to CSR)
+    input wire[3:0] csr_select,
     output reg[31:0] o_csr_out, //CSR value to be loaded to basereg
 
     // Trap-Handler 
@@ -44,7 +45,19 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
     /// Pipeline Control ///
     // input wire i_ce, // input clk enable for pipeline stalling of this stage
     // input wire i_stall //informs this stage to stall
+    // 
+
+    // //Ports for hardware csr access (for interrupt controller)
+    // input wire [11:0] csr_addr,
+    // input  wire read_enable,
+    // input wire [31:0] data_in,
+    // output wire write_enable,  // Output port for write enable signal
+    // output wire [31:0] data_out //  
 );
+
+    wire [2:0] i_funct3;
+
+    assign i_funct3 = csr_select[2:0];
     
                //CSR operation type (funt3)
     localparam CSRRW = 3'b001,
@@ -92,11 +105,11 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
                ECALL = 11;
     
     
-    wire opcode_store=i_opcode[`STORE];
-    wire opcode_load=i_opcode[`LOAD];
-    wire opcode_branch=i_opcode[`BRANCH];
-    wire opcode_jal=i_opcode[`JAL];
-    wire opcode_jalr=i_opcode[`JALR];
+    // wire opcode_store=i_opcode[`STORE];
+    // wire opcode_load=i_opcode[`LOAD];
+    // wire opcode_branch=i_opcode[`BRANCH];
+    // wire opcode_jal=i_opcode[`JAL];
+    // wire opcode_jalr=i_opcode[`JALR];
     wire opcode_system=i_opcode[`SYSTEM];
 
     reg[31:0] csr_in; //value to be stored to CSR
@@ -204,7 +217,8 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
             mcountinhibit_cy <= 0;
             mcountinhibit_ir <= 0;
         end
-        else if(!stall_bit) begin
+        // else if(!stall_bit) begin
+        else begin
             /***************************************************** CSR control logic *****************************************************/
             //MSTATUS (controls hart's current operating state (mie and mpie are the only configurable bits))
             if(i_csr_index == MSTATUS && csr_enable) begin 
@@ -269,44 +283,44 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
             end
             /* Volume 2 pg. 38: When a trap is taken into M-mode, mcause is written with a code indicating the event that caused the trap */
             // Interrupts have priority (external first, then s/w, then timer---[2] sec 3.1.9), then synchronous traps.
-            if(go_to_trap && !o_go_to_trap_q) begin
-                if(external_interrupt_pending) begin 
-                    mcause_code <= MACHINE_EXTERNAL_INTERRUPT; 
-                    mcause_intbit <= 1;
-                end
-                else if(software_interrupt_pending) begin
-                    mcause_code <= MACHINE_SOFTWARE_INTERRUPT; 
-                    mcause_intbit <= 1;
-                end
-                else if(timer_interrupt_pending) begin 
-                    mcause_code <= MACHINE_TIMER_INTERRUPT; 
-                    mcause_intbit <= 1;
-                end
-                else if(i_is_inst_illegal) begin
-                    mcause_code <= ILLEGAL_INSTRUCTION;
-                    mcause_intbit <= 0 ;
-                end
-                else if(is_inst_addr_misaligned) begin
-                    mcause_code <= INSTRUCTION_ADDRESS_MISALIGNED;
-                    mcause_intbit <= 0;
-                end
-                else if(i_is_ecall) begin 
-                    mcause_code <= ECALL;
-                    mcause_intbit <= 0;
-                end
-                else if(i_is_ebreak) begin
-                    mcause_code <= EBREAK;
-                    mcause_intbit <= 0;
-                end
-                else if(is_load_addr_misaligned) begin
-                    mcause_code <= LOAD_ADDRESS_MISALIGNED;
-                    mcause_intbit <= 0;
-                end
-                else if(is_store_addr_misaligned) begin
-                    mcause_code <= STORE_ADDRESS_MISALIGNED;
-                    mcause_intbit <= 0;
-                end
-            end
+            // if(go_to_trap && !o_go_to_trap_q) begin
+            //     if(external_interrupt_pending) begin 
+            //         mcause_code <= MACHINE_EXTERNAL_INTERRUPT; 
+            //         mcause_intbit <= 1;
+            //     end
+            //     else if(software_interrupt_pending) begin
+            //         mcause_code <= MACHINE_SOFTWARE_INTERRUPT; 
+            //         mcause_intbit <= 1;
+            //     end
+            //     else if(timer_interrupt_pending) begin 
+            //         mcause_code <= MACHINE_TIMER_INTERRUPT; 
+            //         mcause_intbit <= 1;
+            //     end
+            //     else if(i_is_inst_illegal) begin
+            //         mcause_code <= ILLEGAL_INSTRUCTION;
+            //         mcause_intbit <= 0 ;
+            //     end
+            //     else if(is_inst_addr_misaligned) begin
+            //         mcause_code <= INSTRUCTION_ADDRESS_MISALIGNED;
+            //         mcause_intbit <= 0;
+            //     end
+            //     else if(i_is_ecall) begin 
+            //         mcause_code <= ECALL;
+            //         mcause_intbit <= 0;
+            //     end
+            //     else if(i_is_ebreak) begin
+            //         mcause_code <= EBREAK;
+            //         mcause_intbit <= 0;
+            //     end
+            //     else if(is_load_addr_misaligned) begin
+            //         mcause_code <= LOAD_ADDRESS_MISALIGNED;
+            //         mcause_intbit <= 0;
+            //     end
+            //     else if(is_store_addr_misaligned) begin
+            //         mcause_code <= STORE_ADDRESS_MISALIGNED;
+            //         mcause_intbit <= 0;
+            //     end
+            // end
             
             
             //MTVAL (exception-specific information to assist software in handling trap)
@@ -316,9 +330,9 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
             /*If mtval is written with a nonzero value when a breakpoint, address-misaligned, access-fault, or
             page-fault exception occurs on an instruction fetch, load, or store, then mtval will contain the
             faulting virtual address.*/
-            if(go_to_trap && !o_go_to_trap_q) begin
-                if(is_load_addr_misaligned || is_store_addr_misaligned) mtval <= i_y;
-            end           
+            // if(go_to_trap && !o_go_to_trap_q) begin
+            //     if(is_load_addr_misaligned || is_store_addr_misaligned) mtval <= i_y;
+            // end           
             
             
             //MCYCLE (counts number of i_clk cycle executed by core [LOWER HALF])
@@ -328,10 +342,10 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
             
             
             //MCYCLEH (counts number of i_clk cycle executed by core [UPPER HALF])
-            if(i_csr_index == MCYCLEH && csr_enable) begin
-                mcycle[63:32] <= csr_in; 
-            end
-            mcycle <= mcountinhibit_cy? mcycle : mcycle + 1; //increments mcycle every clock cycle
+            // if(i_csr_index == MCYCLEH && csr_enable) begin
+            //     mcycle[63:32] <= csr_in; 
+            // end
+            // mcycle <= mcountinhibit_cy? mcycle : mcycle + 1; //increments mcycle every clock cycle
             
             //MTIME (real-time counter [millisecond increment])
             /* Volume 2 pg. 44: Platforms provide a real-time counter, exposed as a memory-mapped machine-mode
@@ -387,32 +401,32 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
 
              /****************************************************************************************************************************/
              
-             /************************************** Registered Outputs for Trap Handlers ************************************************/
-             if(i_ce) begin
-                 o_go_to_trap_q <= go_to_trap;
-                 o_return_from_trap_q <= return_from_trap;
-                 o_return_address <= mepc;
-                 /* Volume 2 pg. 30: When MODE=Direct (0), all traps into machine mode cause the i_pc to be set to the address in the  
-                 BASE field. When MODE=Vectored (1), all synchronous exceptions into machine mode cause the i_pc to be set to the address 
-                 in the BASE field, whereas interrupts cause the i_pc to be set to the address in the BASE field plus four times the
-                 interrupt cause number */
-                 if(mtvec_mode[1] && is_interrupt) o_trap_address <= {mtvec_base,2'b00} + {28'b0,mcause_code<<2};
-                 else o_trap_address <= {mtvec_base,2'b00};
+        //      /************************************** Registered Outputs for Trap Handlers ************************************************/
+        //      if(i_ce) begin
+        //          o_go_to_trap_q <= go_to_trap;
+        //          o_return_from_trap_q <= return_from_trap;
+        //          o_return_address <= mepc;
+        //          /* Volume 2 pg. 30: When MODE=Direct (0), all traps into machine mode cause the i_pc to be set to the address in the  
+        //          BASE field. When MODE=Vectored (1), all synchronous exceptions into machine mode cause the i_pc to be set to the address 
+        //          in the BASE field, whereas interrupts cause the i_pc to be set to the address in the BASE field plus four times the
+        //          interrupt cause number */
+        //          if(mtvec_mode[1] && is_interrupt) o_trap_address <= {mtvec_base,2'b00} + {28'b0,mcause_code<<2};
+        //          else o_trap_address <= {mtvec_base,2'b00};
                  
-                 /****************************************************************************************************************************/
+        //          /****************************************************************************************************************************/
                  
-                 o_csr_out <= csr_data;
-              end
-              else begin //THIS SOLVES THE PROBLEM OF FREERTOS NOT WORKING
-                o_go_to_trap_q <= 0;
-                o_return_from_trap_q <= 0;
-              end
-        end
-        else begin
-            // this CSR will always be updated
-            mcycle <= mcountinhibit_cy? mcycle : mcycle + 1; //increments mcycle every clock cycle
-            minstret <= mcountinhibit_ir? minstret : minstret + {63'b0,(i_minstret_inc && !o_go_to_trap_q && !o_return_from_trap_q)}; //increment minstret every instruction
-        end
+        //          o_csr_out <= csr_data;
+        //       end
+        //       else begin //THIS SOLVES THE PROBLEM OF FREERTOS NOT WORKING
+        //         o_go_to_trap_q <= 0;
+        //         o_return_from_trap_q <= 0;
+        //       end
+        // end
+        // else begin
+        //     // this CSR will always be updated
+        //     mcycle <= mcountinhibit_cy? mcycle : mcycle + 1; //increments mcycle every clock cycle
+        //     minstret <= mcountinhibit_ir? minstret : minstret + {63'b0,(i_minstret_inc && !o_go_to_trap_q && !o_return_from_trap_q)}; //increment minstret every instruction
+        // end
     end
 
    always @* begin
@@ -426,18 +440,18 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
         go_to_trap = 0;
         return_from_trap = 0;
         
-        if(i_ce) begin
-             external_interrupt_pending =  mstatus_mie && mie_meie && (mip_meip); //machine_interrupt_enable + machine_external_interrupt_enable + machine_external_interrupt_pending must all be high
-             software_interrupt_pending = mstatus_mie && mie_msie && mip_msip;  //machine_interrupt_enable + machine_software_interrupt_enable + machine_software_interrupt_pending must all be high
-             timer_interrupt_pending = mstatus_mie && mie_mtie && mip_mtip; //machine_interrupt_enable + machine_timer_interrupt_enable + machine_timer_interrupt_pending must all be high
+        // if(i_ce) begin
+        //      external_interrupt_pending =  mstatus_mie && mie_meie && (mip_meip); //machine_interrupt_enable + machine_external_interrupt_enable + machine_external_interrupt_pending must all be high
+        //      software_interrupt_pending = mstatus_mie && mie_msie && mip_msip;  //machine_interrupt_enable + machine_software_interrupt_enable + machine_software_interrupt_pending must all be high
+        //      timer_interrupt_pending = mstatus_mie && mie_mtie && mip_mtip; //machine_interrupt_enable + machine_timer_interrupt_enable + machine_timer_interrupt_pending must all be high
              
-             is_interrupt = external_interrupt_pending || software_interrupt_pending || timer_interrupt_pending;
-             is_exception = (i_is_inst_illegal || is_inst_addr_misaligned || i_is_ecall || i_is_ebreak || is_load_addr_misaligned || is_store_addr_misaligned) && !writeback_change_pc;
-             is_trap = is_interrupt || is_exception;
-             go_to_trap = is_trap; //a trap is taken, save i_pc, and go to trap address
-             return_from_trap = i_is_mret; // return from trap, go back to saved i_pc
+        //      is_interrupt = external_interrupt_pending || software_interrupt_pending || timer_interrupt_pending;
+        //      is_exception = (i_is_inst_illegal || is_inst_addr_misaligned || i_is_ecall || i_is_ebreak || is_load_addr_misaligned || is_store_addr_misaligned) && !writeback_change_pc;
+        //      is_trap = is_interrupt || is_exception;
+        //      go_to_trap = is_trap; //a trap is taken, save i_pc, and go to trap address
+        //      return_from_trap = i_is_mret; // return from trap, go back to saved i_pc
              
-         end
+        //  end
          /*************************************************************************************************************************************/
          
          
