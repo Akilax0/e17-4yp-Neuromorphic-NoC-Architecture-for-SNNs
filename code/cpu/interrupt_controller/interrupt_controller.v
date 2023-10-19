@@ -41,10 +41,9 @@ module interrupt_controller(
     //     else return_from_isr = 1'b0;
     // end
 
-
     // combinational logic to calc next stage begin
     always @*begin
-        case ( current_state)
+        case (current_state)
             IDLE_STATE: begin
                 if (interrupt_signal == 1'b1)
                     next_state = ISR_INIT_STATE;
@@ -52,12 +51,12 @@ module interrupt_controller(
                     next_state = IDLE_STATE;
             end
             ISR_INIT_STATE:
-                next_state = ISR_STATE;
-            ISR_STATE: begin
-                if (return_from_isr == 1'b1)
-                    next_state = IDLE;
+                next_state = RETURN_STATE;
+            RETURN_STATE: begin
+                if (return_from_isr == 1'b1) 
+                    next_state = IDLE;:
                 else
-                    next_state = ISR_STATE;
+                    next_state = RETURN_STATE;
             end
         endcase 
     end
@@ -71,9 +70,14 @@ module interrupt_controller(
             end
             ISR_INIT_STATE: begin
                 mux_sel = 1'b1;
+                // read isr from csr
+                // write pc to csr
+                // mux to isr
             end
-            ISR_STATE: begin
+            RETURN_STATE: begin
                 mux_sel = 1'b0;
+                // read pc from csr 
+                // use this 
             end
         endcase
     end 
@@ -85,10 +89,10 @@ module interrupt_controller(
             current_state = IDLE_STATE;
         else begin
             current_state = next_state;
-            if (current_state == ISR_INIT_STATE)
-                en_regfile = 1'b1;
-            else    
-                en_regfile = 1'b0; 
+            // if (current_state == ISR_INIT_STATE)
+            //     en_regfile = 1'b1;
+            // else    
+            //     en_regfile = 1'b0; 
             
         end
     end

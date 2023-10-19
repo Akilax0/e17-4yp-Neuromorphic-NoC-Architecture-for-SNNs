@@ -228,7 +228,12 @@ module rv32i_csr #(parameter TRAP_ADDRESS = 0) (
             end
             else begin
                 if(go_to_trap && !o_go_to_trap_q) begin
-                    /* Volume 2 pg. 21: xPIE holds the value of the interrupt-enable bit active prior to the trap. 
+                    /* Volume 2 pg. 21: xPIE holds the value of on ///
+    // input wire[2:0] i_funct3, // CSR instruction operation
+    input wire[11:0] i_csr_index, // immediate value from decoder
+    input wire[31:0] i_imm, //unsigned immediate for immediate type of CSR instruction (new value to be stored to CSR)
+    input wire[31:0] i_rs1, //Source register 1 value (new value to be stored to CSR)
+    input wire[3:0] csr_selectthe interrupt-enable bit active prior to the trap. 
                     When a trap is taken from privilege mode y into privilege mode x,xPIE is set to the value of x IE;
                     x IE is set to 0; and xPP is set to y. */
                     mstatus_mie <= 0; //no nested interrupt allowed 
