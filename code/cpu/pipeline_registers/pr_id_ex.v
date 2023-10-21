@@ -22,8 +22,8 @@ module pr_id_ex (
     input [4:0] ID_REG_WRITE_ADDR, ID_REG_READ_ADDR1, ID_REG_READ_ADDR2;
     input ID_REG_WRITE_EN, ID_OPERAND1_SELECT, ID_OPERAND2_SELECT;
     input [5:0] ID_ALU_SELECT;
-    input [3:0] ID_DATA_MEM_READ, ID_BRANCH_CTRL, ID_CSR_SELECT;
-    input [2:0] ID_DATA_MEM_WRITE;
+    input [3:0] ID_DATA_MEM_READ, ID_BRANCH_CTRL;
+    input [2:0] ID_DATA_MEM_WRITE, ID_CSR_SELECT;
     input [1:0] ID_WB_VALUE_SELECT;
 
 
@@ -31,8 +31,8 @@ module pr_id_ex (
     output reg [4:0] EX_REG_WRITE_ADDR, EX_REG_READ_ADDR1, EX_REG_READ_ADDR2;
     output reg EX_REG_WRITE_EN, EX_OPERAND1_SELECT, EX_OPERAND2_SELECT;
     output reg [5:0] EX_ALU_SELECT;
-    output reg [3:0] EX_DATA_MEM_READ, EX_BRANCH_CTRL,EX_CSR_SELECT;
-    output reg [2:0] EX_DATA_MEM_WRITE;
+    output reg [3:0] EX_DATA_MEM_READ, EX_BRANCH_CTRL;
+    output reg [2:0] EX_DATA_MEM_WRITE,EX_CSR_SELECT;
     output reg [1:0] EX_WB_VALUE_SELECT;
 
     always @ (posedge CLK)
@@ -54,7 +54,7 @@ module pr_id_ex (
             EX_DATA_MEM_WRITE = 3'b0;
             EX_DATA_MEM_READ = 4'b0;
             EX_BRANCH_CTRL = 4'b0;
-            EX_CSR_SELECT = 4'b0;
+            EX_CSR_SELECT = 3'b0;
             EX_WB_VALUE_SELECT = 2'b0;
         end
         else

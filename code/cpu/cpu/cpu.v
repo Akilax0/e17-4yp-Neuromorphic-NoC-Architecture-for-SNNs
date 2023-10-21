@@ -20,7 +20,7 @@
 `include "support_modules/mux_2to1_32bit.v"
 `include "support_modules/mux_2to1_5bit.v"
 
-`include "zicsr/zicsr.v"
+`include "zicsr/zicsr_reg.v"
 `include "interrupt_controller/interrupt_controller.v"
 
 `timescale 1ns/100ps
@@ -48,8 +48,8 @@ module cpu (
     // ID
     wire [31:0] ID_PC, ID_INSTRUCTION, ID_REG_DATA1, ID_REG_DATA2, ID_IMMEDIATE;
     wire [5:0] ID_ALU_SELECT;
-    wire [3:0] ID_DATA_MEM_READ, ID_BRANCH_CTRL, ID_CSR_SELECT;
-    wire [2:0] ID_DATA_MEM_WRITE, ID_IMMEDIATE_SELECT;
+    wire [3:0] ID_DATA_MEM_READ, ID_BRANCH_CTRL;
+    wire [2:0] ID_DATA_MEM_WRITE, ID_IMMEDIATE_SELECT, ID_CSR_SELECT;
     wire [1:0] ID_WB_VALUE_SELECT;
     wire ID_REG_WRITE_EN, ID_OPERAND1_SELECT, ID_OPERAND2_SELECT, ID_LU_HAZ_SIG,
          ID_PR_IF_ID_RESET, ID_PR_IF_ID_HOLD, ID_PR_ID_EX_RESET;
@@ -57,11 +57,11 @@ module cpu (
     // EX
     wire [31:0] EX_PC, EX_IMMEDIATE, EX_REG_DATA1, EX_REG_DATA2,
                 EX_OP1_FWD_MUX_OUT, EX_OP2_FWD_MUX_OUT, 
-                EX_ALU_DATA1, EX_ALU_DATA2, EX_ALU_OUT;
+                EX_ALU_DATA1, EX_ALU_DATA2, EX_ALU_OUT, EX_CSR_DATA;
     wire [5:0] EX_ALU_SELECT;
     wire [4:0] EX_REG_WRITE_ADDR, EX_REG_READ_ADDR1, EX_REG_READ_ADDR2;
-    wire [3:0] EX_DATA_MEM_READ, EX_BRANCH_CTRL, EX_CSR_SELECT;
-    wire [2:0] EX_DATA_MEM_WRITE;
+    wire [3:0] EX_DATA_MEM_READ, EX_BRANCH_CTRL;
+    wire [2:0] EX_DATA_MEM_WRITE, EX_CSR_SELECT;
     wire [1:0] EX_OP1_FWD_SEL, EX_OP2_FWD_SEL, EX_WB_VALUE_SELECT;
     wire EX_REG_WRITE_EN, EX_OPERAND1_SELECT, EX_OPERAND2_SELECT, EX_BRANCH_SELECT;
     wire [31:0] EX_UIMM;
@@ -107,7 +107,7 @@ module cpu (
         ID_DATA_MEM_WRITE, ID_DATA_MEM_READ,
         ID_BRANCH_CTRL, ID_IMMEDIATE_SELECT, 
         ID_OPERAND1_SELECT, ID_OPERAND2_SELECT, 
-        ID_WB_VALUE_SELECT
+        ID_WB_VALUE_SELECT, ID_CSR_SELECT
     );
 
     reg_file ID_REG_FILE (
@@ -176,10 +176,12 @@ module cpu (
     // CSR select mux
     // mux_2to1_5bit CSR_SELECT( EX_OP1_FWD_MUX_OUT, UIMM, CSR_VALUE_SELECT, CSR_MUX_OUT) 
     // Check to add new hardware accessible ports
-    zicsr CSR_REG(CLK, RESET, EX_IMMEDIATE, EX_REG_READ_ADDR1, EX_OP1_FWD_MUX_OUT, EX_CSR_SELECT);
+    // read_en, csr_out, write_en, csr_data
+    // EX_CSR_DATA not forwarded yet
+    zicsr_reg CSR_REG(CLK, RESET, EX_IMMEDIATE, EX_REG_READ_ADDR1, EX_OP1_FWD_MUX_OUT, EX_CSR_SELECT, EX_CSR_DATA, 0,0);
 
     /****************************************** EX / MEM ******************************************/
-    pr_ex_mem PIPE_REG_EX_MEM (, CSR_VALUE_SELECT, CSR_OUT);
+    pr_ex_mem PIPE_REG_EX_MEM (
 
         CLK, RESET, 
 

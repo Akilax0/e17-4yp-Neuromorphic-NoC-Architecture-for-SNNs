@@ -15,10 +15,9 @@ module control_unit (
 
     // Output control signals
     output wire REG_WRITE_EN, OPERAND1_SELECT, OPERAND2_SELECT;
-    output wire [3:0] CSR_VALUE_SELECT;
     output wire [5:0] ALU_SELECT;
     output wire [3:0] DATA_MEM_READ, BRANCH_CTRL;
-    output wire [2:0] DATA_MEM_WRITE, IMMEDIATE_SELECT;
+    output wire [2:0] DATA_MEM_WRITE, IMMEDIATE_SELECT, CSR_VALUE_SELECT;
     output wire [1:0] WRITEBACK_VALUE_SELECT;
 
     // Decoded instruction segments
@@ -148,9 +147,9 @@ module control_unit (
         2'b10;      // Everything else
 
     /*************************** CSR mux select signal generation ***************************/
-    assign #3 CSR_VALUE_SELECT[2:0] =  funct3;
+    assign #3 CSR_VALUE_SELECT =  funct3;
 
-    CSR_VALUE_SELECT[3] = (opcode == 7'b1110011);  
+    // CSR_VALUE_SELECT[3] = (opcode == 7'b1110011);  
 
     // FLOAT ALWAYS BLOCK TO IMPLEMENT (I AM CONFUSION: What always block?)
 
