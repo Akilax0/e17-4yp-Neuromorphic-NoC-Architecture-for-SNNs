@@ -23,6 +23,10 @@
 `include "zicsr/zicsr_reg.v"
 `include "interrupt_controller/interrupt_controller.v"
 
+// Remove this module after demo
+`include "interconnect/interconnect.v"
+
+
 `timescale 1ns/100ps
 
 module cpu (

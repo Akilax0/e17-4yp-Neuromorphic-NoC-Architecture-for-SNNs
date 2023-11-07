@@ -1,0 +1,278 @@
+$date
+	Tue Nov  7 21:45:38 2023
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module interconnect_tb $end
+$var wire 2 ! b_n_addr_out [1:0] $end
+$var wire 32 " b_data_out [31:0] $end
+$var wire 2 # a_n_addr_out [1:0] $end
+$var wire 32 $ a_data_out [31:0] $end
+$var reg 32 % a_data_in [31:0] $end
+$var reg 2 & a_n_addr_in [1:0] $end
+$var reg 1 ' a_read_en $end
+$var reg 1 ( a_write_en $end
+$var reg 32 ) b_data_in [31:0] $end
+$var reg 2 * b_n_addr_in [1:0] $end
+$var reg 1 + b_read_en $end
+$var reg 1 , b_write_en $end
+$var reg 1 - clk $end
+$var reg 1 . reset $end
+$scope module my_in $end
+$var wire 32 / a_data_in [31:0] $end
+$var wire 2 0 a_n_addr_in [1:0] $end
+$var wire 1 ' a_read_en $end
+$var wire 1 ( a_write_en $end
+$var wire 32 1 b_data_in [31:0] $end
+$var wire 2 2 b_n_addr_in [1:0] $end
+$var wire 1 + b_read_en $end
+$var wire 1 , b_write_en $end
+$var wire 1 - clk $end
+$var wire 1 . reset $end
+$var wire 5 3 btoa_ocup [4:0] $end
+$var wire 1 4 btoa_full $end
+$var wire 1 5 btoa_err $end
+$var wire 1 6 btoa_empty $end
+$var wire 34 7 btoa_data_out [33:0] $end
+$var wire 34 8 btoa_data_in [33:0] $end
+$var wire 2 9 b_n_addr_out [1:0] $end
+$var wire 32 : b_data_out [31:0] $end
+$var wire 5 ; atob_ocup [4:0] $end
+$var wire 1 < atob_full $end
+$var wire 1 = atob_err $end
+$var wire 1 > atob_empty $end
+$var wire 34 ? atob_data_out [33:0] $end
+$var wire 34 @ atob_data_in [33:0] $end
+$var wire 2 A a_n_addr_out [1:0] $end
+$var wire 32 B a_data_out [31:0] $end
+$scope module atob $end
+$var wire 1 - clk $end
+$var wire 34 C data_in [33:0] $end
+$var wire 1 + read_en $end
+$var wire 1 . reset $end
+$var wire 1 ( write_en $end
+$var reg 34 D data_out [33:0] $end
+$var reg 1 > empty $end
+$var reg 1 = error $end
+$var reg 5 E fifo_ocup [4:0] $end
+$var reg 1 < full $end
+$var reg 5 F next_read_ptr [4:0] $end
+$var reg 5 G next_write_ptr [4:0] $end
+$var reg 5 H ocup [4:0] $end
+$var reg 5 I read_ptr_ff [4:0] $end
+$var reg 5 J write_ptr_ff [4:0] $end
+$var integer 32 K i [31:0] $end
+$upscope $end
+$scope module btoa $end
+$var wire 1 - clk $end
+$var wire 34 L data_in [33:0] $end
+$var wire 1 ' read_en $end
+$var wire 1 . reset $end
+$var wire 1 , write_en $end
+$var reg 34 M data_out [33:0] $end
+$var reg 1 6 empty $end
+$var reg 1 5 error $end
+$var reg 5 N fifo_ocup [4:0] $end
+$var reg 1 4 full $end
+$var reg 5 O next_read_ptr [4:0] $end
+$var reg 5 P next_write_ptr [4:0] $end
+$var reg 5 Q ocup [4:0] $end
+$var reg 5 R read_ptr_ff [4:0] $end
+$var reg 5 S write_ptr_ff [4:0] $end
+$var integer 32 T i [31:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b100000 T
+b0 S
+b0 R
+b0 Q
+b0 P
+b0 O
+b0 N
+b0 M
+b0 L
+b100000 K
+b0 J
+b0 I
+b0 H
+b0 G
+b0 F
+b0 E
+b0 D
+b0 C
+b0 B
+b0 A
+b0 @
+b0 ?
+1>
+0=
+0<
+b0 ;
+b0 :
+b0 9
+b0 8
+b0 7
+16
+05
+04
+b0 3
+b0 2
+b0 1
+b0 0
+b0 /
+1.
+0-
+0,
+0+
+b0 *
+b0 )
+0(
+0'
+b0 &
+b0 %
+b0 $
+b0 #
+b0 "
+b0 !
+$end
+#5000
+b100000 T
+b100000 K
+1-
+#10000
+b1 P
+b1 G
+0-
+1,
+b10101011101010111010101110101011 8
+b10101011101010111010101110101011 L
+b10101011101010111010101110101011 )
+b10101011101010111010101110101011 1
+1(
+b10100101101001011010010110100101 %
+b10100101101001011010010110100101 /
+b110100101101001011010010110100101 @
+b110100101101001011010010110100101 C
+b1 &
+b1 0
+0.
+#15000
+b10100101101001011010010110100101 "
+b10100101101001011010010110100101 :
+b1 !
+b1 9
+b10101011101010111010101110101011 $
+b10101011101010111010101110101011 B
+b1 ;
+b1 H
+b1 E
+b10 G
+b110100101101001011010010110100101 ?
+b110100101101001011010010110100101 D
+0>
+b1 3
+b1 Q
+b1 N
+b10 P
+b10101011101010111010101110101011 7
+b10101011101010111010101110101011 M
+06
+b1 J
+b1 S
+1-
+#20000
+0-
+b10111011101110111011101110101011 8
+b10111011101110111011101110101011 L
+b10111011101110111011101110101011 )
+b10111011101110111011101110101011 1
+b10101010101010101010101010101010 %
+b10101010101010101010101010101010 /
+b1010101010101010101010101010101010 @
+b1010101010101010101010101010101010 C
+b10 &
+b10 0
+#25000
+b10 3
+b10 Q
+b10 N
+b11 P
+b10 ;
+b10 H
+b10 E
+b11 G
+b10 S
+b10 J
+1-
+#30000
+b1 F
+b10 G
+b1 O
+b10 P
+0-
+0,
+1+
+0(
+1'
+b110101010101010101010101010101010 @
+b110101010101010101010101010101010 C
+b1 &
+b1 0
+#35000
+b10101010101010101010101010101010 "
+b10101010101010101010101010101010 :
+b10 !
+b10 9
+b10111011101110111011101110101011 $
+b10111011101110111011101110101011 B
+b1 ;
+b1 H
+b1 E
+b10 F
+b1010101010101010101010101010101010 ?
+b1010101010101010101010101010101010 D
+b1 3
+b1 Q
+b1 N
+b10 O
+b10111011101110111011101110101011 7
+b10111011101110111011101110101011 M
+b1 I
+b1 R
+1-
+#40000
+0-
+#45000
+b0 $
+b0 B
+b0 "
+b0 :
+b0 !
+b0 9
+b0 3
+b0 Q
+b0 N
+15
+b0 7
+b0 M
+16
+b0 ;
+b0 H
+b0 E
+1=
+b0 ?
+b0 D
+1>
+b10 R
+b10 I
+1-
+#50000
+0-
