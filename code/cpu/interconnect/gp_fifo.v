@@ -16,38 +16,56 @@ module gp_fifo(
     input write_en,
     input read_en,
     input [33:0] data_in,
-    output reg [33:0] data_out,
-    output reg error,
-    output reg full,
-    output reg empty,
-    output reg [4:0] ocup
+    output wire [33:0] data_out,
+    output wire error,
+    output wire full,
+    output wire empty,
+    output wire [4:0] ocup
 );
 
     // this is one less than MSB (32bit -> 5 )
     `define MSB_SLOT 4
 
     reg [33:0] fifo_ff [31:0]; 
-    reg [`MSB_SLOT:0] write_ptr_ff,read_ptr_ff, next_write_ptr, next_read_ptr,fifo_ocup;
+    reg [`MSB_SLOT:0] write_ptr_ff,read_ptr_ff;
+    wire [`MSB_SLOT:0] next_write_ptr, next_read_ptr,fifo_ocup;
 
-    always@*begin
-        next_read_ptr = read_ptr_ff;
-        next_write_ptr = write_ptr_ff;
+    // check hear for combinational logic
+    // assign next_read_ptr = read_ptr_ff;
+    // assign next_write_ptr = write_ptr_ff;
 
-        empty = (write_ptr_ff == read_ptr_ff);
-        full = (write_ptr_ff[`MSB_SLOT-1:0] == read_ptr_ff[`MSB_SLOT-1:0] )  && (write_ptr_ff[`MSB_SLOT]!= read_ptr_ff[`MSB_SLOT]);
+    assign empty = (write_ptr_ff == read_ptr_ff);
+    assign full = (write_ptr_ff[`MSB_SLOT-1:0] == read_ptr_ff[`MSB_SLOT-1:0] )  && (write_ptr_ff[`MSB_SLOT]!= read_ptr_ff[`MSB_SLOT]);
+            
+    assign data_out = empty ? 1'b0 : fifo_ff[read_ptr_ff[`MSB_SLOT-1:0]];
+    
+    assign next_write_ptr =  (write_en && ~full) ? write_ptr_ff + 1'b1: write_ptr_ff;
+
+    assign next_read_ptr =   (read_en && ~empty) ? read_ptr_ff + 1'b1 : read_ptr_ff;
+
+    assign error = (write_en && full) || (read_en && empty);
+    assign fifo_ocup = write_ptr_ff - read_ptr_ff;
+    assign ocup = fifo_ocup;
+
+    // always@*begin
+    //     next_read_ptr = read_ptr_ff;
+    //     next_write_ptr = write_ptr_ff;
+
+    //     empty = (write_ptr_ff == read_ptr_ff);
+    //     full = (write_ptr_ff[`MSB_SLOT-1:0] == read_ptr_ff[`MSB_SLOT-1:0] )  && (write_ptr_ff[`MSB_SLOT]!= read_ptr_ff[`MSB_SLOT]);
                 
-        data_out = empty ? 0 : fifo_ff[read_ptr_ff[`MSB_SLOT-1:0]];
+    //     data_out = empty ? 0 : fifo_ff[read_ptr_ff[`MSB_SLOT-1:0]];
         
-        if (write_en && ~full)
-            next_write_ptr = write_ptr_ff + 1'b1;
+    //     if (write_en && ~full)
+    //         next_write_ptr = write_ptr_ff + 1'b1;
 
-        if (read_en && ~empty)
-            next_read_ptr = read_ptr_ff + 1'b1;
+    //     if (read_en && ~empty)
+    //         next_read_ptr = read_ptr_ff + 1'b1;
 
-        error = (write_en && full) || (read_en && empty);
-        fifo_ocup = write_ptr_ff - read_ptr_ff;
-        ocup = fifo_ocup;
-    end
+    //     error = (write_en && full) || (read_en && empty);
+    //     fifo_ocup = write_ptr_ff - read_ptr_ff;
+    //     ocup = fifo_ocup;
+    // end
 
     integer i;
     always@(posedge clk or posedge reset)begin

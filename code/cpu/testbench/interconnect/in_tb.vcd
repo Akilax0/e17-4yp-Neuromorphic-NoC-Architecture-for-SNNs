@@ -1,5 +1,5 @@
 $date
-	Tue Nov  7 21:45:38 2023
+	Fri Nov 10 11:00:17 2023
 $end
 $version
 	Icarus Verilog
@@ -52,17 +52,17 @@ $var wire 32 B a_data_out [31:0] $end
 $scope module atob $end
 $var wire 1 - clk $end
 $var wire 34 C data_in [33:0] $end
+$var wire 1 = error $end
+$var wire 1 < full $end
+$var wire 5 D ocup [4:0] $end
 $var wire 1 + read_en $end
 $var wire 1 . reset $end
 $var wire 1 ( write_en $end
-$var reg 34 D data_out [33:0] $end
-$var reg 1 > empty $end
-$var reg 1 = error $end
-$var reg 5 E fifo_ocup [4:0] $end
-$var reg 1 < full $end
-$var reg 5 F next_read_ptr [4:0] $end
-$var reg 5 G next_write_ptr [4:0] $end
-$var reg 5 H ocup [4:0] $end
+$var wire 5 E next_write_ptr [4:0] $end
+$var wire 5 F next_read_ptr [4:0] $end
+$var wire 5 G fifo_ocup [4:0] $end
+$var wire 1 > empty $end
+$var wire 34 H data_out [33:0] $end
 $var reg 5 I read_ptr_ff [4:0] $end
 $var reg 5 J write_ptr_ff [4:0] $end
 $var integer 32 K i [31:0] $end
@@ -70,17 +70,17 @@ $upscope $end
 $scope module btoa $end
 $var wire 1 - clk $end
 $var wire 34 L data_in [33:0] $end
+$var wire 1 5 error $end
+$var wire 1 4 full $end
+$var wire 5 M ocup [4:0] $end
 $var wire 1 ' read_en $end
 $var wire 1 . reset $end
 $var wire 1 , write_en $end
-$var reg 34 M data_out [33:0] $end
-$var reg 1 6 empty $end
-$var reg 1 5 error $end
-$var reg 5 N fifo_ocup [4:0] $end
-$var reg 1 4 full $end
-$var reg 5 O next_read_ptr [4:0] $end
-$var reg 5 P next_write_ptr [4:0] $end
-$var reg 5 Q ocup [4:0] $end
+$var wire 5 N next_write_ptr [4:0] $end
+$var wire 5 O next_read_ptr [4:0] $end
+$var wire 5 P fifo_ocup [4:0] $end
+$var wire 1 6 empty $end
+$var wire 34 Q data_out [33:0] $end
 $var reg 5 R read_ptr_ff [4:0] $end
 $var reg 5 S write_ptr_ff [4:0] $end
 $var integer 32 T i [31:0] $end
@@ -148,8 +148,8 @@ b100000 T
 b100000 K
 1-
 #10000
-b1 P
-b1 G
+b1 N
+b1 E
 0-
 1,
 b10101011101010111010101110101011 8
@@ -171,21 +171,21 @@ b1 !
 b1 9
 b10101011101010111010101110101011 $
 b10101011101010111010101110101011 B
-b1 ;
-b1 H
-b1 E
-b10 G
 b110100101101001011010010110100101 ?
-b110100101101001011010010110100101 D
-0>
-b1 3
-b1 Q
-b1 N
-b10 P
+b110100101101001011010010110100101 H
+b10 E
 b10101011101010111010101110101011 7
-b10101011101010111010101110101011 M
-06
+b10101011101010111010101110101011 Q
+b10 N
+0>
+b1 ;
+b1 D
+b1 G
 b1 J
+06
+b1 3
+b1 M
+b1 P
 b1 S
 1-
 #20000
@@ -201,22 +201,22 @@ b1010101010101010101010101010101010 C
 b10 &
 b10 0
 #25000
+b11 N
+b11 E
 b10 3
-b10 Q
-b10 N
-b11 P
-b10 ;
-b10 H
-b10 E
-b11 G
+b10 M
+b10 P
 b10 S
+b10 ;
+b10 D
+b10 G
 b10 J
 1-
 #30000
+b10 N
 b1 F
-b10 G
+b10 E
 b1 O
-b10 P
 0-
 0,
 1+
@@ -233,19 +233,19 @@ b10 !
 b10 9
 b10111011101110111011101110101011 $
 b10111011101110111011101110101011 B
-b1 ;
-b1 H
-b1 E
-b10 F
 b1010101010101010101010101010101010 ?
-b1010101010101010101010101010101010 D
-b1 3
-b1 Q
-b1 N
-b10 O
+b1010101010101010101010101010101010 H
 b10111011101110111011101110101011 7
-b10111011101110111011101110101011 M
+b10111011101110111011101110101011 Q
+b10 F
+b10 O
+b1 ;
+b1 D
+b1 G
 b1 I
+b1 3
+b1 M
+b1 P
 b1 R
 1-
 #40000
@@ -253,25 +253,27 @@ b1 R
 #45000
 b0 $
 b0 B
+15
 b0 "
 b0 :
 b0 !
 b0 9
-b0 3
-b0 Q
-b0 N
-15
-b0 7
-b0 M
-16
-b0 ;
-b0 H
-b0 E
 1=
+b0 7
+b0 Q
+b10 O
 b0 ?
-b0 D
-1>
+b0 H
+b10 F
+16
+b0 3
+b0 M
+b0 P
 b10 R
+1>
+b0 ;
+b0 D
+b0 G
 b10 I
 1-
 #50000
